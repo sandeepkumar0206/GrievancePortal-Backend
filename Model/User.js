@@ -19,10 +19,9 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: true,
-      minlength: 6,
+      minlength: 8,
     },
 
-    // 0 = Citizen, 1 = Government User, 2 = Admin
     role: {
       type: Number,
       enum: [0, 1, 2],
@@ -34,10 +33,16 @@ const userSchema = new mongoose.Schema(
       ref: "Department",
       default: null, // Only for govt users
     },
+
+    address: {
+      type: addressSchema,
+      required: false,
+    },
   },
   { timestamps: true }
 );
 
+// Encrypt password before saving
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
   const salt = await bcrypt.genSalt(10);
@@ -45,6 +50,7 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
+// Compare password
 userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
